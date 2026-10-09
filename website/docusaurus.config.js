@@ -20,10 +20,10 @@ const config = {
   },
 
   // TODO: set these to wherever the workshop gets hosted.
-  url: 'https://your-docusaurus-site.example.com',
+  url: 'https://erdietri.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  baseUrl: '/ai-agent-workshop/',
 
   onBrokenLinks: 'throw',
 
