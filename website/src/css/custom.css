@@ -1,0 +1,138 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/*
+ * Magenta palette from erdietri/LearnToCodeWithAI. The two base colors
+ * (#d311fa light, #d509ff dark) come from that project; the light/dark
+ * shades are generated from them with the same lightness steps that
+ * Docusaurus uses for its default green palette.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #d311fa;
+  --ifm-color-primary-dark: #cc05f4;
+  --ifm-color-primary-darker: #c505eb;
+  --ifm-color-primary-darkest: #ae04d1;
+  --ifm-color-primary-light: #d623fa;
+  --ifm-color-primary-lighter: #d82bfb;
+  --ifm-color-primary-lightest: #dd46fb;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* A narrower docs sidebar (the default is 300px) with slightly smaller links. */
+:root {
+  --doc-sidebar-width: 260px;
+}
+
+.theme-doc-sidebar-container .menu__link {
+  font-size: 0.9rem;
+}
+
+/* Wrap long lines in code blocks instead of scrolling sideways. */
+.theme-code-block pre code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * Diff lines in code blocks, set with the diff-add / diff-remove magic
+ * comments (see docusaurus.config.js). Each line also gets a + or - marker
+ * so the change is not shown by color alone.
+ */
+:root {
+  --code-diff-add-bg: rgba(46, 160, 67, 0.22);
+  --code-diff-add-marker: #1a7f37;
+  --code-diff-remove-bg: rgba(248, 81, 73, 0.2);
+  --code-diff-remove-marker: #cf222e;
+}
+
+[data-theme='dark'] {
+  --code-diff-add-bg: rgba(46, 160, 67, 0.3);
+  --code-diff-add-marker: #3fb950;
+  --code-diff-remove-bg: rgba(248, 81, 73, 0.3);
+  --code-diff-remove-marker: #ff7b72;
+}
+
+.code-block-diff-add-line {
+  background-color: var(--code-diff-add-bg);
+}
+
+.code-block-diff-remove-line {
+  background-color: var(--code-diff-remove-bg);
+}
+
+/*
+ * Without line numbers, a line is a block: stretch its color to the edges of
+ * the code block and put the marker in the left padding.
+ */
+.code-block-diff-add-line:not([class*='codeLine_']),
+.code-block-diff-remove-line:not([class*='codeLine_']) {
+  display: block;
+  position: relative;
+  margin: 0 calc(-1 * var(--ifm-pre-padding));
+  padding: 0 var(--ifm-pre-padding);
+}
+
+.code-block-diff-add-line:not([class*='codeLine_'])::before,
+.code-block-diff-remove-line:not([class*='codeLine_'])::before {
+  position: absolute;
+  left: 0.3rem;
+  font-weight: bold;
+}
+
+.code-block-diff-add-line:not([class*='codeLine_'])::before {
+  content: '+';
+  color: var(--code-diff-add-marker);
+}
+
+.code-block-diff-remove-line:not([class*='codeLine_'])::before {
+  content: '-';
+  color: var(--code-diff-remove-marker);
+}
+
+/*
+ * With line numbers, Docusaurus makes each line a table row, so display must
+ * be left alone. The row color covers the code, so tint the line number cell
+ * (which has its own background) and put the marker in it.
+ */
+.code-block-diff-add-line [class*='codeLineNumber'] {
+  background-image: linear-gradient(var(--code-diff-add-bg), var(--code-diff-add-bg));
+}
+
+.code-block-diff-remove-line [class*='codeLineNumber'] {
+  background-image: linear-gradient(var(--code-diff-remove-bg), var(--code-diff-remove-bg));
+}
+
+.code-block-diff-add-line [class*='codeLineNumber']::after,
+.code-block-diff-remove-line [class*='codeLineNumber']::after {
+  position: absolute;
+  left: 0.3rem;
+  font-weight: bold;
+}
+
+.code-block-diff-add-line [class*='codeLineNumber']::after {
+  content: '+';
+  color: var(--code-diff-add-marker);
+}
+
+.code-block-diff-remove-line [class*='codeLineNumber']::after {
+  content: '-';
+  color: var(--code-diff-remove-marker);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #d509ff;
+  --ifm-color-primary-dark: #c800f1;
+  --ifm-color-primary-darker: #be00e5;
+  --ifm-color-primary-darkest: #a200c3;
+  --ifm-color-primary-light: #d920ff;
+  --ifm-color-primary-lighter: #db2cff;
+  --ifm-color-primary-lightest: #e14eff;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}

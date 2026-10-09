@@ -1,0 +1,181 @@
+---
+id: github-agent-tools
+sidebar_position: 5
+title: Agent Tools
+description: Create tools for the agent to use
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Agent Tools
+
+Right now our agent can only talk. To work as a GitHub project manager it needs **tools**: actions it can ask us to run. The model never runs anything itself. It replies with the name of a *tool* and the *arguments* to use, and our code makes the GitHub API call.
+
+Before that can happen, we have to describe each tool to the model.
+
+To have a our agent be able to manage issues in a GitHub repository for us, we first need the agent to be able to get our repository information and then list the issues. This will allow it to get all the context it needs to continue working once we have a *memory/context system* in place.
+
+## List Repositories Tool
+
+The first thing we need to do is be able to list repositories we have access too. Without this, the agent cannot know what repos it can manage and if we don't want to use an exact name for the repo, it will allow it to search by itself. From there it can get more detailed info about the repo is found.
+
+### Updating our code
+
+Here is the updated code for our `agent.py` file that adds a tool and functionto search for repositories:
+
+```python title="agent.py" showLineNumbers
+import os
+import ollama
+# diff-add
+import requests
+
+GITHUB_API_KEY = os.getenv("GITHUB_TOKEN")
+
+SYSTEM_PROMPT = """You are a project manager and you are helping a user with their GitHub repository. You have access to the GitHub API and can perform actions such as creating issues, closing issues, updating issues, organizing and managing projects. You can only answer from the tools you are given. You will be given a task by the user and you will use the GitHub API to complete that task. You will not make any changes to the repository or project without explicit instructions from the user. You will not make any assumptions about the user's intentions or goals. You will always ask for clarification if you are unsure about what the user wants you to do. You will always provide clear and concise feedback to the user on the status of their task and any errors that may occur."""
+
+messages = [
+    {"role": "system", "content": SYSTEM_PROMPT},
+    # diff-remove
+    {"role": "user", "content": "TEST TASK TO VERIFY SETUP. Please answer 'READY'."},
+]
+# diff-remove
+response = ollama.chat(model="qwen3.5:4b", messages=messages, think=False)
+# diff-remove
+print(response.message.content)
+# diff-add-start
+GITHUB_HEADERS = {
+    "Authorization": f"Bearer {GITHUB_API_KEY}",
+    "Accept": "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+}
+
+def list_repos():
+    """
+    List all of the repositories the user has access to, most recently updated first.
+
+    Returns:
+        list: The repositories, each with its full name, description, language and whether it is private.
+    """
+    repos = []
+    for page in range(1, 11):  # GitHub sends 100 per page, so this stops at 1,000
+        response = requests.get(
+            "https://api.github.com/user/repos",
+            headers=GITHUB_HEADERS,
+            params={"sort": "updated", "per_page": 100, "page": page},
+            timeout=10,
+        )
+
+        # Return the error as text so the model can tell the user what went wrong.
+        if response.status_code != 200:
+            message = response.json().get("message", response.reason)
+            return f"GitHub error {response.status_code}: {message}"
+
+        repos += response.json()
+        if len(response.json()) < 100:
+            break
+
+    # Keep only the fields the model needs to tell the repositories apart.
+    return [
+        {
+            "full_name": repo["full_name"],
+            "description": repo["description"],
+            "language": repo["language"],
+            "private": repo["private"],
+        }
+        for repo in repos
+    ]
+# diff-add-end
+```
+
+### Code explanation
+
+We have removed the test message and added headers for the GitHub API requests.
+
+We also added a new function called `list_repos` that uses the GitHub API to list all of the repositories the user has access to. It returns a list of dictionaries, each containing the full name, description, language, and whether the repository is private. This is a good jumping off point for the agent.
+
+A **tool** is basically a *function* that a model can call. In the case of an API, you can consider a tool to be a *wrapper* around the API *endpoint* in a format the model can understand. The model will call the tool and pass in any arguments it needs. The tool will then run and return the result to the model. The model can then use that result to continue its task.
+
+Now lets add some code so we can test if it works. We will add a test message to the `messages` array that asks the agent to list the repositories it has access to. The agent will then use the `list_repos` function to get the list of repositories and return it to us.
+
+### Adding a test message, almost a full agent
+
+The code we are adding is needed because a tool_call is sort of like a memory leak. The model will call the tool, but it will not be able to get the data back without it being added to the *messages array*. This is because the model does not have access to the tool, it only knows that it can call it. The code we are adding will allow the model to get the data back from the tool and return it to us. This keeping the memory leak in check.
+
+```python title="agent.py" showLineNumbers
+import os
+import ollama
+import requests
+
+GITHUB_API_KEY = os.getenv("GITHUB_TOKEN")
+
+SYSTEM_PROMPT = """You are a project manager and you are helping a user with their GitHub repository. You have access to the GitHub API and can perform actions such as creating issues, closing issues, updating issues, organizing and managing projects. You can only answer from the tools you are given. You will be given a task by the user and you will use the GitHub API to complete that task. You will not make any changes to the repository or project without explicit instructions from the user. You will not make any assumptions about the user's intentions or goals. You will always ask for clarification if you are unsure about what the user wants you to do. You will always provide clear and concise feedback to the user on the status of their task and any errors that may occur."""
+
+messages = [
+    {"role": "system", "content": SYSTEM_PROMPT},
+]
+
+GITHUB_HEADERS = {
+    "Authorization": f"Bearer {GITHUB_API_KEY}",
+    "Accept": "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+}
+
+def list_repos():
+    """
+    List all of the repositories the user has access to, most recently updated first.
+
+    Returns:
+        list: The repositories, each with its full name, description, language and whether it is private.
+    """
+    repos = []
+    for page in range(1, 11):  # GitHub sends 100 per page, so this stops at 1,000
+        response = requests.get(
+            "https://api.github.com/user/repos",
+            headers=GITHUB_HEADERS,
+            params={"sort": "updated", "per_page": 100, "page": page},
+            timeout=10,
+        )
+
+        # Return the error as text so the model can tell the user what went wrong.
+        if response.status_code != 200:
+            message = response.json().get("message", response.reason)
+            return f"GitHub error {response.status_code}: {message}"
+
+        repos += response.json()
+        if len(response.json()) < 100:
+            break
+
+    # Keep only the fields the model needs to tell the repositories apart.
+    return [
+        {
+            "full_name": repo["full_name"],
+            "description": repo["description"],
+            "language": repo["language"],
+            "private": repo["private"],
+        }
+        for repo in repos
+    ]
+
+# diff-add-start
+messages.append({"role": "user", "content": "What repositories do I have?"})
+
+response = ollama.chat(model="qwen3.5:4b", messages=messages, tools=[list_repos], think=False)
+messages.append(response.message)
+
+# If the model asked for a tool, run it and add the result to the conversation.
+if response.message.tool_calls:
+    call = response.message.tool_calls[0]
+    result = list_repos(**call.function.arguments)
+    messages.append({"role": "tool", "tool_name": call.function.name, "content": str(result)})
+
+    # Ask again so the model can read the result and answer.
+    response = ollama.chat(model="qwen3.5:4b", messages=messages, tools=[list_repos], think=False)
+
+print(response.message.content)
+# diff-add-end
+```
+
+Now you can run this code using `python3 agent.py` and you should see a list of repositories you have access to. This can take awhile depending on your system resources, but it should eventually return a list of repositories. If you have a lot of repositories, it may take a few minutes to return the list. There are things we can do to make this faster, but for now we will keep it simple.
+
+The next step is to add a **loop** so the model can keep asking for more information until it has what it needs to complete the task. We will do that in the next section.

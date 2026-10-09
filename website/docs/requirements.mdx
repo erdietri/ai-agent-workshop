@@ -1,0 +1,418 @@
+---
+id: requirements
+sidebar_position: 2
+title: Requirements
+description: Install Python 3 and Ollama, download the Qwen3.5 model, and create a GitHub access token.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Requirements
+
+The language model runs locally on your own machine. You need three things in place before you start:
+
+1. **Python 3**, to write the agent.
+2. **Ollama** with the **Qwen3.5** model, to run the language model locally.
+3. A free **GitHub account** and an **access token**, so the agent can use the GitHub API.
+
+Most of the setup time is the model download, so start that early.
+
+## 1. Python 3
+
+The workshop needs **Python 3.10 or newer**. Check whether you already have it:
+
+<Tabs groupId="operating-system" queryString>
+  <TabItem value="macos" label="macOS" default>
+
+```bash
+python3 --version
+```
+
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+
+```bash
+python3 --version
+```
+
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+
+```powershell
+py --version
+```
+
+  </TabItem>
+</Tabs>
+
+You should see something like `Python 3.12.4`. If the command is not found, or the version is older than 3.10, install Python:
+
+<Tabs groupId="operating-system" queryString>
+  <TabItem value="macos" label="macOS" default>
+
+Download the installer from [python.org/downloads](https://www.python.org/downloads/), or use [Homebrew](https://brew.sh):
+
+```bash
+brew install python
+```
+
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+
+Use your distribution's package manager. On Debian or Ubuntu:
+
+```bash
+sudo apt update
+sudo apt install python3 python3-venv python3-pip
+```
+
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+
+Download the installer from [python.org/downloads](https://www.python.org/downloads/). On the first screen of the installer, tick **Add python.exe to PATH** before you click Install.
+
+  </TabItem>
+</Tabs>
+
+:::note
+On Windows, the Python launcher is called `py`. Wherever the workshop says `python3`, type `py` instead.
+:::
+
+## 2. Python packages
+
+The workshop code uses two Python packages:
+
+- [`ollama`](https://github.com/ollama/ollama-python), to talk to the model you will run locally.
+- [`requests`](https://requests.readthedocs.io), to call the GitHub API.
+
+Install them into a **virtual environment**, a private copy of Python for this project, so they do not touch the rest of your system. First make a folder for the workshop and move into it:
+
+```bash
+mkdir agent-workshop
+cd agent-workshop
+```
+
+Then create and activate the virtual environment, and install the packages:
+
+<Tabs groupId="operating-system" queryString>
+  <TabItem value="macos" label="macOS" default>
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install ollama requests
+```
+
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install ollama requests
+```
+
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+
+```powershell
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install ollama requests
+```
+
+  </TabItem>
+</Tabs>
+
+Your prompt now starts with `(.venv)`, which means the environment is active. Check the install:
+
+```bash
+pip list
+```
+
+The list should include `ollama` and `requests`.
+
+:::note[Activate it again in every new terminal]
+The environment is active only in the terminal where you ran the activate command. Whenever you open a new terminal for the workshop, `cd agent-workshop` and run the activate line again (`source .venv/bin/activate`, or `.venv\Scripts\Activate.ps1` on Windows).
+:::
+
+:::warning[Troubleshooting]
+- **Windows: `running scripts is disabled on this system`**: PowerShell is blocking the activate script. Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, answer `Y`, then run the activate line again.
+- **Linux: `ensurepip is not available`**: install the venv package, for example `sudo apt install python3-venv` on Debian or Ubuntu.
+:::
+
+## 3. Ollama
+
+[Ollama](https://ollama.com) downloads language models and serves them on your machine through a local API.
+
+<Tabs groupId="operating-system" queryString>
+  <TabItem value="macos" label="macOS" default>
+
+Requires macOS Sonoma (14) or newer. On Apple silicon Macs, Ollama uses the GPU. On Intel Macs it runs on the CPU only.
+
+1. Download **Ollama.dmg** from [ollama.com/download](https://ollama.com/download).
+2. Open it and drag **Ollama** into your **Applications** folder.
+3. Launch **Ollama** once. If it asks to add the `ollama` command to your PATH, allow it.
+
+Prefer the terminal? This installs the same thing:
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+
+Run the official install script:
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+For manual installs, GPU drivers and running Ollama as a service, see the [Ollama Linux docs](https://docs.ollama.com/linux).
+
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+
+Requires Windows 10 22H2 or newer. Either download **OllamaSetup.exe** from [ollama.com/download](https://ollama.com/download) and run it, or run this in PowerShell:
+
+```powershell
+irm https://ollama.com/install.ps1 | iex
+```
+
+You do not need Administrator rights. After installing, Ollama runs in the background.
+
+  </TabItem>
+</Tabs>
+
+Open a **new** terminal and check that the `ollama` command works:
+
+```bash
+ollama --version
+```
+
+### Make sure the server is running
+
+The `ollama` command talks to a local server. The macOS and Windows apps start it for you. Check that it is up:
+
+```bash
+curl http://localhost:11434
+```
+
+You should see `Ollama is running`. If you get a connection error, start the server yourself in a separate terminal and leave that terminal open:
+
+```bash
+ollama serve
+```
+
+## 4. The Qwen3.5 model
+
+The workshop uses [Qwen3.5](https://ollama.com/library/qwen3.5), an open-source model family from Qwen. Its Ollama page lists **tools**, **thinking** and **vision** as capabilities. Tool support is what lets a model decide to call your Python functions, which is the core of an agent.
+
+The workshop uses the **4B** build, `qwen3.5:4b`. It is a download of 3.3 – 4.0 GB, which keeps setup quick and fits on most laptops. Download it:
+
+```bash
+ollama pull qwen3.5:4b
+```
+
+:::note
+Always include the `:4b` tag. A bare `ollama pull qwen3.5` downloads the larger 9B build instead.
+:::
+
+### Using a different size
+
+The model is loaded into memory when it runs, so it needs free RAM (or GPU memory) at least as large as its download size, plus headroom. The 4B build is the workshop default, but Qwen3.5 comes in other sizes:
+
+| Tag | Download size | Notes |
+| --- | --- | --- |
+| `qwen3.5:4b` | 3.3 – 4.0 GB | **Default for this workshop** |
+| `qwen3.5` (same as `qwen3.5:9b`) | 6.6 – 7.6 GB | Larger, if your machine has the memory |
+| `qwen3.5:27b` | 17 – 20 GB | Needs a high-memory machine |
+
+Sizes are from the [Qwen3.5 page on Ollama](https://ollama.com/library/qwen3.5), which also lists smaller and larger tags.
+
+:::tip
+If you use a different tag, use it everywhere the workshop says `qwen3.5:4b`. For example, replace `"qwen3.5:4b"` with `"qwen3.5"` in the code.
+:::
+
+### Try it in the terminal
+
+Start a chat to confirm the model works:
+
+```bash
+ollama run qwen3.5:4b
+```
+
+Ask it something, then type `/bye` to exit. The first answer can take a little longer while the model loads into memory. Because Qwen3.5 is a thinking model, it may also show its reasoning before it answers, which can be slow on modest hardware.
+
+## 5. Check Python can reach Ollama
+
+This script uses the `ollama` package you installed in step 2 to send one message to the model. Save it as `hello_ollama.py` inside your `agent-workshop` folder:
+
+```python title="hello_ollama.py"
+import ollama
+
+response = ollama.chat(
+    model="qwen3.5:4b",
+    messages=[{"role": "user", "content": "Say hello in five words."}],
+    # Skip the model's step-by-step reasoning so this check is quick.
+    think=False,
+)
+
+print(response.message.content)
+```
+
+Run it in the terminal where the virtual environment is active:
+
+<Tabs groupId="operating-system" queryString>
+  <TabItem value="macos" label="macOS" default>
+
+```bash
+python3 hello_ollama.py
+```
+
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+
+```bash
+python3 hello_ollama.py
+```
+
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+
+```powershell
+py hello_ollama.py
+```
+
+  </TabItem>
+</Tabs>
+
+If a short greeting prints, Python is talking to a model running on your own machine.
+
+:::note[Why `"think": False`?]
+Qwen3.5 is a thinking model: by default it reasons step by step before it answers. That is useful for hard problems, but even a one-line greeting can take minutes on modest hardware. Turning it off keeps this check fast.
+:::
+
+:::warning[Troubleshooting]
+- **`ModuleNotFoundError: No module named 'ollama'`**: the virtual environment is not active in this terminal, or the install did not finish. Activate it and run `pip install ollama requests` again. See [Python packages](#2-python-packages).
+- **`Failed to connect to Ollama`**: the Ollama server is not running. See [Make sure the server is running](#make-sure-the-server-is-running).
+- **`model 'qwen3.5:4b' not found`**: the model has not been downloaded under that name. Run `ollama list` to see what you have, and `ollama pull qwen3.5:4b` if it is missing.
+:::
+
+## 6. A GitHub access token
+
+The agent you build will look things up on GitHub, such as repositories and issues, by calling the [GitHub REST API](https://docs.github.com/en/rest). Without a token you are limited to 60 requests per hour. With one the limit is 5,000, and the same token can be reused for everything in the workshop.
+
+You need a free [GitHub account](https://github.com/signup). Then create a **fine-grained personal access token**:
+
+1. Open [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new?name=ai-agent-workshop&expires_in=30). Or click your profile picture, then **Settings** → **Developer settings** → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**.
+2. Set **Token name** to `ai-agent-workshop` and **Expiration** to 30 days.
+3. Leave **Resource owner** as your own account.
+4. Under **Repository access**, choose **Public repositories**.
+5. Under **Permissions**, add nothing. Fine-grained tokens always include read-only access to public repositories, which is all the workshop needs.
+6. Click **Generate token**, then copy the token. GitHub shows it only once.
+
+:::warning[Keep the token private]
+Treat the token like a password. Do not paste it into code, commit it to a repository, or share it in chat. If it leaks, delete it on the same GitHub settings page and create a new one.
+:::
+
+This token is read-only on purpose. The agent can look things up, but it cannot change anything on GitHub.
+
+### Store the token in an environment variable
+
+Your code will read the token from an environment variable called `GITHUB_TOKEN`, so it never has to appear in a file. Set it in the terminal you will run the workshop code from:
+
+<Tabs groupId="operating-system" queryString>
+  <TabItem value="macos" label="macOS" default>
+
+```bash
+export GITHUB_TOKEN="paste-your-token-here"
+```
+
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+
+```bash
+export GITHUB_TOKEN="paste-your-token-here"
+```
+
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+
+```powershell
+$env:GITHUB_TOKEN = "paste-your-token-here"
+```
+
+  </TabItem>
+</Tabs>
+
+The variable lasts only as long as that terminal window. If you open a new terminal, set it again.
+
+### Check Python can reach GitHub
+
+This script uses the `requests` package to read one public repository with your token. Save it as `hello_github.py`:
+
+```python title="hello_github.py"
+import os
+
+import requests
+
+response = requests.get(
+    "https://api.github.com/repos/octocat/Hello-World",
+    headers={
+        "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    },
+)
+response.raise_for_status()
+
+print("Repository:", response.json()["full_name"])
+print("Requests allowed per hour:", response.headers["X-RateLimit-Limit"])
+```
+
+Run it from the same terminal where the virtual environment is active and you set `GITHUB_TOKEN`:
+
+<Tabs groupId="operating-system" queryString>
+  <TabItem value="macos" label="macOS" default>
+
+```bash
+python3 hello_github.py
+```
+
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+
+```bash
+python3 hello_github.py
+```
+
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+
+```powershell
+py hello_github.py
+```
+
+  </TabItem>
+</Tabs>
+
+You should see `Repository: octocat/Hello-World` and `Requests allowed per hour: 5000`. If it says `60`, the request was not authenticated.
+
+:::warning[Troubleshooting]
+- **`KeyError: 'GITHUB_TOKEN'`**: the variable is not set in this terminal. Set it again with the command above.
+- **`401 Client Error: Unauthorized`**: GitHub rejected the token. Check that you copied all of it, and that it has not expired.
+:::
+
+## Checklist
+
+You are ready for the next step when all of these are true:
+
+- [ ] `python3 --version` (or `py --version` on Windows) reports 3.10 or newer
+- [ ] `pip list` shows `ollama` and `requests`, with `(.venv)` at the start of your prompt
+- [ ] `ollama --version` prints a version
+- [ ] `ollama list` shows `qwen3.5:4b`
+- [ ] `hello_ollama.py` prints a greeting
+- [ ] `hello_github.py` prints `octocat/Hello-World` and `5000`

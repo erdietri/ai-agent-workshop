@@ -1,0 +1,54 @@
+---
+id: github-agent-setup
+sidebar_position: 4
+title: Agent Setup
+description: Intial agent setup
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Agent Setup
+
+Theoretically, if the requirements page has been followed, you should have Python 3 and Ollama installed, and the Qwen3.5 model downloaded. If you haven't done that yet, go back to the requirements page and follow those instructions.
+
+## Scaffolding the Agent
+
+Let's start by creating a new file called 'agent.py'. We will do everything in this file. Please note that this is not the best practice for production code, but it will be easier to follow along in a workshop setting.
+
+After that file has been created, we will add the following code to it:
+
+```python title="agent.py"
+import os
+import ollama
+
+GITHUB_API_KEY = os.getenv("GITHUB_TOKEN")
+
+SYSTEM_PROMPT = """You are a project manager and you are helping a user with their GitHub repository. You have access to the GitHub API and can perform actions such as creating issues, closing issues, updating issues, organizing and managing projects. You can only answer from the tools you are given. You will be given a task by the user and you will use the GitHub API to complete that task. You will not make any changes to the repository or project without explicit instructions from the user. You will not make any assumptions about the user's intentions or goals. You will always ask for clarification if you are unsure about what the user wants you to do. You will always provide clear and concise feedback to the user on the status of their task and any errors that may occur."""
+
+messages = [
+    {"role": "system", "content": SYSTEM_PROMPT},
+    {"role": "user", "content": "TEST TASK TO VERIFY SETUP. Please answer 'READY'."},
+]
+
+response = ollama.chat(model="qwen3.5:4b", messages=messages, think=False)
+
+print(response.message.content)
+```
+
+The above code is our intial setup for our agent. The first two imports are for the `os` and `ollama` libraries. The `os` library is used to access environment variables, and the `ollama` library is used to interact with the Ollama API. Then we obtain the github API key from the *environment variable* `GITHUB_TOKEN`.
+
+The `SYSTEM_PROMPT` variable is a string that contains the **'system' instructions** for the agent. This is the intial *prompt* that guides the agent's behavior.
+
+The `messages` variable is an array of dictionaries that contains the *system prompt* and a *user message*. The user message is a test task to verify the setup of the agent. In the future, this will be the task that the user wants the agent to perform and we will use this create a *memory system* for the agent.
+
+If you run the above code using `python3 agent.py`, you should see something like the following:
+
+```
+I am a project manager, but I currently have no access to GitHub tools (API) or a repository context to perform actions like creating issues or managing projects as described in my system instructions. Therefore, I cannot verify the setup by interacting with a repo yet.
+
+However, based strictly on your request for verification text: **READY**.
+```
+
+Now lets move on to the next step of our agent setup, which is to give it access to **tools**.
+

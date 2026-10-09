@@ -1,0 +1,33 @@
+---
+id: what-is-an-agent
+sidebar_position: 3
+title: What Makes an Agent an Agent
+description: Explanation of what an agent is.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# What Makes an Agent an Agent
+
+An **agent** is a *language model* that can take *actions* in the world to achieve a *goal*.
+
+## What is an LLM
+
+By default an **LLM** is a *stateless* text generator. It takes in a *prompt* and generates text based on that prompt. It does not have any *memory* or *state*, and it does not have any ability to take actions in the world or get additional information.
+
+# What is an Agent
+
+The most basic definition of an agent is a LLM that can take actions outside of its own system to achieve a goal. To enable this, an agent needs three things: *tools*, a *loop*, and *state* with a *goal*.
+
+**What is each of these components?**
+
+1. **Tools**: it can take an *action* (run code, search, read and write files, call APIs) instead of only producing text.
+2. **Loop**: it picks an *action*, sees the *result*, then decides the next step. This repeats until it judges the goal is met.
+3. **Goal and state**: it works toward an objective and carries *context* (*message history*, *memory*, a *scratchpad*) from step to step.
+
+# How can we create our own?
+
+There are a few ways to create an agent. The simplest is to use a *framework* that provides the tools, loop, and state for you. In this workshop we will be building ours using Python, Ollama to run a local model, and some APIs. We will be building it all *from scratch* so you can understand the inner workings of an agent. After this workshop, we will list some resources you can use that make this process faster and easier with less manual work.
+
+In the next section we will go over the initial setup of our agent, and then we will start building it piece by piece.

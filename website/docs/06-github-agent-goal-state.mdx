@@ -1,0 +1,17 @@
+---
+id: github-agent-state
+sidebar_position: 6
+title: Agent Goal and State
+description: Explanation of how to give the agent a goal and state
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Agent Goal and State
+
+This is where we should go into details about how to create a goal and state for the agent. But we have basically done that in all of the previous sections. The system prompt is the goal, and the messages are the state. The agent will use the tools to achieve the goal, and it will use the messages to keep track of what it has done and what it needs to do next.
+
+This is a very simple and thin implementation of a goal and state system. In a more complex state implementation, the state would be stored in a database or a file, and the agent would be able to access it from multiple sessions. The goal would also be more complex, and the agent would be able to change its goal based on the state and the tools available to it.
+
+For this workshop, we will keep what we have, but please consider looking into making it more complex and robust if you need that for your use case.
